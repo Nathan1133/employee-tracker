@@ -17,6 +17,10 @@ connection.connect(function(err){
     options();
 })
 
+
+
+
+
 // prompts user with list of options to choose from
 function options() {
     inquirer
@@ -160,3 +164,97 @@ function addEmployee() {
             })
     })
 };
+
+// add a department to the database
+function addDepartment() {
+    inquirer
+        .prompt([
+            {
+                name: 'newDepartment', 
+                type: 'input', 
+                message: 'Which department would you like to add?'
+            }
+            ]).then(function (answer) {
+                connection.query(
+                    'INSERT INTO department SET ?',
+                    {
+                        name: answer.newDepartment
+                    });
+                var query = 'SELECT * FROM department';
+                connection.query(query, function(err, res) {
+                if(err)throw err;
+                console.log('Your department has been added!');
+                console.table('All Departments:', res);
+                options();
+                })
+            })
+};
+
+// add a role to the database
+function addRole() {
+    connection.query('SELECT * FROM department', function(err, res) {
+        if (err) throw err;
+    
+        inquirer 
+        .prompt([
+            {
+                name: 'new_role',
+                type: 'input', 
+                message: "What new role do you want to add?"
+            },
+            {
+                name: 'salary',
+                type: 'input',
+                message: 'What is the salary of the role? (Enter a number)'
+            },
+            {
+                name: 'Department',
+                type: 'list',
+                choices: function() {
+                    var deptArry = [];
+                    for (let i = 0; i < res.length; i++) {
+                    deptArry.push(res[i].name);
+                    }
+                    return deptArry;
+                },
+            }
+        ]).then(function (answer) {
+            let department_id;
+            for (let a = 0; a < res.length; a++) {
+                if (res[a].name == answer.Department) {
+                    department_id = res[a].id;
+                }
+            }
+    
+            connection.query(
+                'INSERT INTO role SET ?',
+                {
+                    title: answer.new_role,
+                    salary: answer.salary,
+                    department_id: department_id
+                },
+                function (err, res) {
+                    if(err)throw err;
+                    console.log('Your new role has been added!');
+                    console.table('All Roles:', res);
+                    options();
+                })
+        })
+    })
+};
+
+
+function updateRole() {
+
+};
+
+
+function deleteEmployee() {
+
+};
+
+// exit app
+function exitApp() {
+    connection.end();
+};
+
